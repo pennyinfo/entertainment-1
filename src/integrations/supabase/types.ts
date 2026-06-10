@@ -14,7 +14,137 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      admins: {
+        Row: {
+          created_at: string
+          id: string
+          mobile: string
+          password: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mobile: string
+          password: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mobile?: string
+          password?: string
+        }
+        Relationships: []
+      }
+      panchayaths: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      super_admins: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          password: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          password: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          password?: string
+        }
+        Relationships: []
+      }
+      users: {
+        Row: {
+          created_at: string
+          id: string
+          mobile: string
+          name: string
+          panchayath_id: string | null
+          ward_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mobile: string
+          name: string
+          panchayath_id?: string | null
+          ward_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mobile?: string
+          name?: string
+          panchayath_id?: string | null
+          ward_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "users_panchayath_id_fkey"
+            columns: ["panchayath_id"]
+            isOneToOne: false
+            referencedRelation: "panchayaths"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "users_ward_id_fkey"
+            columns: ["ward_id"]
+            isOneToOne: false
+            referencedRelation: "wards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wards: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          panchayath_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          panchayath_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          panchayath_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wards_panchayath_id_fkey"
+            columns: ["panchayath_id"]
+            isOneToOne: false
+            referencedRelation: "panchayaths"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
