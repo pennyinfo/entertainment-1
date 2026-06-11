@@ -16,16 +16,10 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const [showLanding, setShowLanding] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setShowLanding(true), 3200);
-    return () => clearTimeout(t);
-  }, []);
-
   return (
     <>
       <SplashScreen />
-      {showLanding ? <Landing /> : <div className="min-h-screen bg-[#0a0a0f]" />}
+      <Landing />
     </>
   );
 }
