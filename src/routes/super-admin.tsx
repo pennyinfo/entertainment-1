@@ -203,7 +203,15 @@ function PlacesTab() {
       </form>
       <div className="space-y-4">
         {panchayaths.map((p) => {
-          const ws = wards.filter((w) => w.panchayath_id === p.id);
+          const ws = wards
+            .filter((w) => w.panchayath_id === p.id)
+            .slice()
+            .sort((a, b) => {
+              const na = parseInt(a.name, 10);
+              const nb = parseInt(b.name, 10);
+              if (!isNaN(na) && !isNaN(nb)) return na - nb;
+              return a.name.localeCompare(b.name);
+            });
           return (
             <div key={p.id} className="rounded-xl border border-white/10 bg-white/5 p-4">
               <div className="flex items-center justify-between mb-3">
