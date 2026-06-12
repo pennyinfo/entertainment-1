@@ -166,10 +166,27 @@ function PlacesTab() {
     reload();
   }
   async function addWard(panchayathId: string) {
-    const name = (wardInputs[panchayathId] ?? "").trim();
-    if (!name) return;
-    const { error } = await supabase.from("wards").insert({ panchayath_id: panchayathId, name });
-    if (error) return toast.error(error.code === "23505" ? "Ward already exists" : error.message);
+    const raw = (wardInputs[panchayathId] ?? "").trim();
+    if (!raw) return;
+    const count = parseInt(raw, 10);
+    if (!Number.isInteger(count) || count < 1 || count > 500) {
+      return toast.error("Enter a number between 1 and 500");
+    }
+    const existing = new Set(
+      wards.filter((w) => w.panchayath_id === panchayathId).map((w) => w.name)
+    );
+    const rows = Array.from({ length: count }, (_, i) => ({
+      panchayath_id: panchayathId,
+      name: String(i + 1),
+    })).filter((r) => !existing.has(r.name));
+    if (rows.length === 0) {
+      toast.message("All wards already exist");
+      setWardInputs((s) => ({ ...s, [panchayathId]: "" }));
+      return;
+    }
+    const { error } = await supabase.from("wards").insert(rows);
+    if (error) return toast.error(error.message);
+    toast.success(`Added ${rows.length} ward(s)`);
     setWardInputs((s) => ({ ...s, [panchayathId]: "" }));
     reload();
   }
@@ -186,7 +203,15 @@ function PlacesTab() {
       </form>
       <div className="space-y-4">
         {panchayaths.map((p) => {
-          const ws = wards.filter((w) => w.panchayath_id === p.id);
+          const ws = wards
+            .filter((w) => w.panchayath_id === p.id)
+            .slice()
+            .sort((a, b) => {
+              const na = parseInt(a.name, 10);
+              const nb = parseInt(b.name, 10);
+              if (!isNaN(na) && !isNaN(nb)) return na - nb;
+              return a.name.localeCompare(b.name);
+            });
           return (
             <div key={p.id} className="rounded-xl border border-white/10 bg-white/5 p-4">
               <div className="flex items-center justify-between mb-3">
@@ -206,7 +231,8 @@ function PlacesTab() {
                 <input
                   value={wardInputs[p.id] ?? ""}
                   onChange={(e) => setWardInputs((s) => ({ ...s, [p.id]: e.target.value }))}
-                  placeholder="Add ward"
+                  placeholder="Number of wards (e.g. 25)"
+                  inputMode="numeric"
                   className="flex-1 rounded-md bg-black/40 border border-white/10 px-3 py-2 text-sm"
                 />
                 <button onClick={() => addWard(p.id)} className="px-3 py-2 rounded-md bg-[#00f0ff] text-black text-sm font-semibold">Add ward</button>
