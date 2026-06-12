@@ -15,6 +15,9 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SigninRouteImport } from './routes/signin'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as QuizSlugRouteImport } from './routes/quiz.$slug'
+import { Route as AdminProgramIdRouteImport } from './routes/admin.program.$id'
+import { Route as AdminProgramIdResultsRouteImport } from './routes/admin.program.$id.results'
 
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
@@ -46,31 +49,55 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const QuizSlugRoute = QuizSlugRouteImport.update({
+  id: '/quiz/$slug',
+  path: '/quiz/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminProgramIdRoute = AdminProgramIdRouteImport.update({
+  id: '/program/$id',
+  path: '/program/$id',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminProgramIdResultsRoute = AdminProgramIdResultsRouteImport.update({
+  id: '/results',
+  path: '/results',
+  getParentRoute: () => AdminProgramIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/super-admin': typeof SuperAdminRoute
   '/welcome': typeof WelcomeRoute
+  '/quiz/$slug': typeof QuizSlugRoute
+  '/admin/program/$id': typeof AdminProgramIdRouteWithChildren
+  '/admin/program/$id/results': typeof AdminProgramIdResultsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/super-admin': typeof SuperAdminRoute
   '/welcome': typeof WelcomeRoute
+  '/quiz/$slug': typeof QuizSlugRoute
+  '/admin/program/$id': typeof AdminProgramIdRouteWithChildren
+  '/admin/program/$id/results': typeof AdminProgramIdResultsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/super-admin': typeof SuperAdminRoute
   '/welcome': typeof WelcomeRoute
+  '/quiz/$slug': typeof QuizSlugRoute
+  '/admin/program/$id': typeof AdminProgramIdRouteWithChildren
+  '/admin/program/$id/results': typeof AdminProgramIdResultsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -81,8 +108,20 @@ export interface FileRouteTypes {
     | '/signup'
     | '/super-admin'
     | '/welcome'
+    | '/quiz/$slug'
+    | '/admin/program/$id'
+    | '/admin/program/$id/results'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/signin' | '/signup' | '/super-admin' | '/welcome'
+  to:
+    | '/'
+    | '/admin'
+    | '/signin'
+    | '/signup'
+    | '/super-admin'
+    | '/welcome'
+    | '/quiz/$slug'
+    | '/admin/program/$id'
+    | '/admin/program/$id/results'
   id:
     | '__root__'
     | '/'
@@ -91,15 +130,19 @@ export interface FileRouteTypes {
     | '/signup'
     | '/super-admin'
     | '/welcome'
+    | '/quiz/$slug'
+    | '/admin/program/$id'
+    | '/admin/program/$id/results'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
+  AdminRoute: typeof AdminRouteWithChildren
   SigninRoute: typeof SigninRoute
   SignupRoute: typeof SignupRoute
   SuperAdminRoute: typeof SuperAdminRoute
   WelcomeRoute: typeof WelcomeRoute
+  QuizSlugRoute: typeof QuizSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -146,27 +189,61 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/quiz/$slug': {
+      id: '/quiz/$slug'
+      path: '/quiz/$slug'
+      fullPath: '/quiz/$slug'
+      preLoaderRoute: typeof QuizSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/program/$id': {
+      id: '/admin/program/$id'
+      path: '/program/$id'
+      fullPath: '/admin/program/$id'
+      preLoaderRoute: typeof AdminProgramIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/program/$id/results': {
+      id: '/admin/program/$id/results'
+      path: '/results'
+      fullPath: '/admin/program/$id/results'
+      preLoaderRoute: typeof AdminProgramIdResultsRouteImport
+      parentRoute: typeof AdminProgramIdRoute
+    }
   }
 }
 
+interface AdminProgramIdRouteChildren {
+  AdminProgramIdResultsRoute: typeof AdminProgramIdResultsRoute
+}
+
+const AdminProgramIdRouteChildren: AdminProgramIdRouteChildren = {
+  AdminProgramIdResultsRoute: AdminProgramIdResultsRoute,
+}
+
+const AdminProgramIdRouteWithChildren = AdminProgramIdRoute._addFileChildren(
+  AdminProgramIdRouteChildren,
+)
+
+interface AdminRouteChildren {
+  AdminProgramIdRoute: typeof AdminProgramIdRouteWithChildren
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminProgramIdRoute: AdminProgramIdRouteWithChildren,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
+  AdminRoute: AdminRouteWithChildren,
   SigninRoute: SigninRoute,
   SignupRoute: SignupRoute,
   SuperAdminRoute: SuperAdminRoute,
   WelcomeRoute: WelcomeRoute,
+  QuizSlugRoute: QuizSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

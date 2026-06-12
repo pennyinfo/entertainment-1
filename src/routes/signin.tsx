@@ -5,12 +5,14 @@ import { userSession } from "@/lib/session";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/signin")({
+  validateSearch: (search: Record<string, unknown>) => ({ next: typeof search.next === "string" && search.next.startsWith("/") ? search.next : "/welcome" }),
   head: () => ({ meta: [{ title: "Sign In — fun-time" }] }),
   component: SignInPage,
 });
 
 function SignInPage() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
   const [mobile, setMobile] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -31,7 +33,7 @@ function SignInPage() {
     if (!data) return toast.error("Not registered. Please sign up.");
     userSession.set({ userId: data.id, name: data.name });
     toast.success("Welcome back, " + data.name);
-    navigate({ to: "/welcome" });
+    window.location.assign(next);
   }
 
   return (

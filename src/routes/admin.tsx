@@ -1,116 +1,26 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { adminSession, type AdminSession } from "@/lib/session";
+import { Button } from "@/components/ui/button";
+import { StatCard } from "@/components/admin/StatCard";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/admin")({
-  head: () => ({ meta: [{ title: "Admin — fun-time" }] }),
-  component: AdminPage,
-});
+export const Route = createFileRoute("/admin")({ head:()=>({meta:[{title:"Admin Dashboard — fun-time"}]}), component:AdminPage });
+type UserRow={id:string;name:string;mobile:string;created_at:string;panchayaths:{name:string}|null;wards:{name:string}|null};
+type Program={id:string;slug:string;title:string;description:string|null;seconds_per_question:number;is_active:boolean;created_at:string};
 
-type UserRow = {
-  id: string;
-  name: string;
-  mobile: string;
-  created_at: string;
-  panchayaths: { name: string } | null;
-  wards: { name: string } | null;
-};
+function AdminPage(){const [session,setSession]=useState<AdminSession|null>(null);useEffect(()=>setSession(adminSession.get()),[]);return session?<AdminDashboard session={session} onSignOut={()=>{adminSession.clear();setSession(null)}}/>:<AdminLogin onLogin={setSession}/>}
+function AdminLogin({onLogin}:{onLogin:(s:AdminSession)=>void}){const[mobile,setMobile]=useState("");const[password,setPassword]=useState("");const[loading,setLoading]=useState(false);async function submit(e:React.FormEvent){e.preventDefault();setLoading(true);const{data,error}=await supabase.from("admins").select("id,mobile,password").eq("mobile",mobile).maybeSingle();setLoading(false);if(error)return toast.error(error.message);if(!data||data.password!==password)return toast.error("Invalid credentials");const s={adminId:data.id,mobile:data.mobile};adminSession.set(s);onLogin(s)}return <main className="grid min-h-screen place-items-center bg-foreground p-6 text-background"><form onSubmit={submit} className="w-full max-w-md rounded-2xl border border-background/10 bg-background/5 p-8"><h1 className="text-3xl font-bold">Admin Login</h1><div className="my-6 space-y-3"><input required className="w-full rounded-lg border border-background/20 bg-foreground px-4 py-3" placeholder="Mobile" value={mobile} onChange={e=>setMobile(e.target.value)}/><input required type="password" className="w-full rounded-lg border border-background/20 bg-foreground px-4 py-3" placeholder="Password" value={password} onChange={e=>setPassword(e.target.value)}/></div><Button disabled={loading} className="w-full">{loading?"Signing in…":"Login"}</Button></form></main>}
 
-function AdminPage() {
-  const [session, setSession] = useState<AdminSession | null>(null);
-
-  useEffect(() => {
-    setSession(adminSession.get());
-  }, []);
-
-  if (!session) return <AdminLogin onLogin={setSession} />;
-  return <AdminDashboard session={session} onSignOut={() => { adminSession.clear(); setSession(null); }} />;
-}
-
-function AdminLogin({ onLogin }: { onLogin: (s: AdminSession) => void }) {
-  const [mobile, setMobile] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("admins").select("id,mobile,password").eq("mobile", mobile).maybeSingle();
-    setLoading(false);
-    if (error) return toast.error(error.message);
-    if (!data || data.password !== password) return toast.error("Invalid credentials");
-    const s = { adminId: data.id, mobile: data.mobile };
-    adminSession.set(s);
-    onLogin(s);
-    toast.success("Signed in as admin");
-  }
-
-  return (
-    <main className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center px-6">
-      <form onSubmit={onSubmit} className="w-full max-w-md rounded-xl border border-white/10 bg-white/5 backdrop-blur p-8 space-y-4">
-        <h1 className="text-3xl font-bold">Admin Login</h1>
-        <input value={mobile} onChange={(e) => setMobile(e.target.value)} placeholder="Mobile" className="w-full rounded-md bg-black/40 border border-white/10 px-3 py-2 outline-none focus:border-[#00f0ff]" />
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" className="w-full rounded-md bg-black/40 border border-white/10 px-3 py-2 outline-none focus:border-[#00f0ff]" />
-        <button disabled={loading} className="w-full py-3 rounded-md font-semibold text-black bg-[#00f0ff]">{loading ? "…" : "Login"}</button>
-      </form>
-    </main>
-  );
-}
-
-function AdminDashboard({ session, onSignOut }: { session: AdminSession; onSignOut: () => void }) {
-  const [users, setUsers] = useState<UserRow[]>([]);
-
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase
-        .from("users")
-        .select("id,name,mobile,created_at,panchayaths(name),wards(name)")
-        .order("created_at", { ascending: false });
-      setUsers((data ?? []) as unknown as UserRow[]);
-    })();
-  }, []);
-
-  return (
-    <main className="min-h-screen bg-[#0a0a0f] text-white px-6 py-10">
-      <div className="max-w-5xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold">Admin Panel</h1>
-            <p className="text-white/60 text-sm">Logged in as {session.mobile}</p>
-          </div>
-          <button onClick={onSignOut} className="px-4 py-2 rounded-md border border-white/20 hover:bg-white/10">Sign out</button>
-        </div>
-        <div className="rounded-xl border border-white/10 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-white/5 text-left">
-              <tr>
-                <th className="p-3">Name</th>
-                <th className="p-3">Mobile</th>
-                <th className="p-3">Panchayath</th>
-                <th className="p-3">Ward</th>
-                <th className="p-3">Registered</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((u) => (
-                <tr key={u.id} className="border-t border-white/10">
-                  <td className="p-3">{u.name}</td>
-                  <td className="p-3">{u.mobile}</td>
-                  <td className="p-3">{u.panchayaths?.name ?? "—"}</td>
-                  <td className="p-3">{u.wards?.name ?? "—"}</td>
-                  <td className="p-3 text-white/50">{new Date(u.created_at).toLocaleDateString()}</td>
-                </tr>
-              ))}
-              {users.length === 0 && (
-                <tr><td colSpan={5} className="p-6 text-center text-white/50">No users yet</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </main>
-  );
+function AdminDashboard({session,onSignOut}:{session:AdminSession;onSignOut:()=>void}){
+ const[tab,setTab]=useState<"dashboard"|"programs"|"users">("dashboard");const[users,setUsers]=useState<UserRow[]>([]);const[programs,setPrograms]=useState<Program[]>([]);const[attempts,setAttempts]=useState(0);const[showForm,setShowForm]=useState(false);const[form,setForm]=useState({title:"",description:"",seconds_per_question:20});
+ async function load(){const[{data:u},{data:p},{count}]=await Promise.all([supabase.from("users").select("id,name,mobile,created_at,panchayaths(name),wards(name)").order("created_at",{ascending:false}),supabase.from("programs").select("*").order("created_at",{ascending:false}),supabase.from("attempts").select("id",{count:"exact",head:true})]);setUsers((u??[]) as unknown as UserRow[]);setPrograms((p??[]) as Program[]);setAttempts(count??0)} useEffect(()=>{void load()},[]);
+ async function createProgram(e:React.FormEvent){e.preventDefault();const slug=`${form.title.toLowerCase().trim().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"")}-${Date.now().toString(36)}`;const{error}=await supabase.from("programs").insert({...form,slug});if(error)return toast.error(error.message);toast.success("Program created");setShowForm(false);setForm({title:"",description:"",seconds_per_question:20});void load()}
+ function share(p:Program){const url=`${window.location.origin}/quiz/${p.slug}`;window.open(`https://wa.me/?text=${encodeURIComponent(`Join ${p.title} quiz competition: ${url}`)}`,"_blank","noopener,noreferrer")}
+ return <main className="min-h-screen bg-muted/40"><header className="border-b bg-card"><div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5"><div><h1 className="text-xl font-bold">fun-time <span className="text-primary">Admin</span></h1><p className="text-xs text-muted-foreground">{session.mobile}</p></div><Button variant="outline" onClick={onSignOut}>Sign out</Button></div></header><div className="mx-auto max-w-6xl px-6 py-8"><nav className="mb-8 flex gap-2">{(["dashboard","programs","users"] as const).map(t=><Button key={t} variant={tab===t?"default":"ghost"} onClick={()=>setTab(t)} className="capitalize">{t}</Button>)}</nav>
+ {tab==="dashboard"&&<><h2 className="mb-5 text-3xl font-bold">Dashboard</h2><div className="grid gap-4 md:grid-cols-3"><StatCard label="Total Users" value={users.length} note="Registered" tone="blue"/><StatCard label="Active Programs" value={programs.filter(p=>p.is_active).length} note="Live" tone="orange"/><StatCard label="Total Attempts" value={attempts} note="Submitted" tone="cyan"/></div><section className="mt-8 rounded-2xl border bg-card p-6"><h3 className="text-lg font-semibold">Recent programs</h3><div className="mt-4 divide-y">{programs.slice(0,5).map(p=><div key={p.id} className="flex items-center justify-between py-4"><div><p className="font-medium">{p.title}</p><p className="text-sm text-muted-foreground">{p.seconds_per_question}s per question</p></div><span className="rounded-full bg-primary/10 px-3 py-1 text-xs text-primary">{p.is_active?"Active":"Closed"}</span></div>)}{!programs.length&&<p className="py-8 text-center text-muted-foreground">Create your first quiz program.</p>}</div></section></>}
+ {tab==="programs"&&<><div className="mb-5 flex items-center justify-between"><div><h2 className="text-3xl font-bold">Programs</h2><p className="text-muted-foreground">Create quizzes, add questions and share them.</p></div><Button onClick={()=>setShowForm(!showForm)}>+ Add program</Button></div>{showForm&&<form onSubmit={createProgram} className="mb-6 grid gap-3 rounded-2xl border bg-card p-5 md:grid-cols-4"><input required maxLength={120} className="rounded-lg border px-3 py-2" placeholder="Program title" value={form.title} onChange={e=>setForm({...form,title:e.target.value})}/><input maxLength={500} className="rounded-lg border px-3 py-2" placeholder="Description" value={form.description} onChange={e=>setForm({...form,description:e.target.value})}/><input required min={5} max={300} type="number" className="rounded-lg border px-3 py-2" value={form.seconds_per_question} onChange={e=>setForm({...form,seconds_per_question:Number(e.target.value)})}/><Button type="submit">Create</Button></form>}<div className="grid gap-4">{programs.map(p=><article key={p.id} className="flex flex-col justify-between gap-5 rounded-2xl border bg-card p-5 md:flex-row md:items-center"><div><h3 className="text-lg font-semibold">{p.title}</h3><p className="text-sm text-muted-foreground">{p.description||"No description"} · {p.seconds_per_question}s/question</p></div><div className="flex flex-wrap gap-2"><Button variant="outline" asChild><Link to="/admin/program/$id" params={{id:p.id}}>Questions</Link></Button><Button variant="outline" onClick={()=>share(p)}>WhatsApp</Button><Button asChild><Link to="/admin/program/$id/results" params={{id:p.id}}>Results</Link></Button></div></article>)}{!programs.length&&<p className="py-16 text-center text-muted-foreground">No programs yet.</p>}</div></>}
+ {tab==="users"&&<><h2 className="mb-5 text-3xl font-bold">Users</h2><div className="overflow-x-auto rounded-2xl border bg-card"><table className="w-full text-sm"><thead className="bg-muted"><tr>{["Name","Mobile","Panchayath","Ward","Registered"].map(h=><th key={h} className="p-4 text-left">{h}</th>)}</tr></thead><tbody>{users.map(u=><tr key={u.id} className="border-t"><td className="p-4">{u.name}</td><td className="p-4">{u.mobile}</td><td className="p-4">{u.panchayaths?.name??"—"}</td><td className="p-4">{u.wards?.name??"—"}</td><td className="p-4 text-muted-foreground">{new Date(u.created_at).toLocaleDateString()}</td></tr>)}</tbody></table></div></>}
+ </div></main>
 }

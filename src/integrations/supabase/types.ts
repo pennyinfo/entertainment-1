@@ -35,6 +35,93 @@ export type Database = {
         }
         Relationships: []
       }
+      attempt_answers: {
+        Row: {
+          attempt_id: string
+          created_at: string
+          id: string
+          is_correct: boolean
+          question_id: string
+          selected_option: string | null
+          time_ms: number
+        }
+        Insert: {
+          attempt_id: string
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          question_id: string
+          selected_option?: string | null
+          time_ms?: number
+        }
+        Update: {
+          attempt_id?: string
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          question_id?: string
+          selected_option?: string | null
+          time_ms?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attempt_answers_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: false
+            referencedRelation: "attempts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attempt_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      attempts: {
+        Row: {
+          id: string
+          program_id: string
+          score: number
+          submitted_at: string
+          total_ms: number
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          program_id: string
+          score?: number
+          submitted_at?: string
+          total_ms?: number
+          user_id: string
+        }
+        Update: {
+          id?: string
+          program_id?: string
+          score?: number
+          submitted_at?: string
+          total_ms?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attempts_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attempts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       panchayaths: {
         Row: {
           created_at: string
@@ -52,6 +139,83 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      programs: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          seconds_per_question: number
+          slug: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          seconds_per_question?: number
+          slug: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          seconds_per_question?: number
+          slug?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      questions: {
+        Row: {
+          correct_option: string
+          created_at: string
+          id: string
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          position: number
+          program_id: string
+          text: string
+        }
+        Insert: {
+          correct_option: string
+          created_at?: string
+          id?: string
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          position?: number
+          program_id: string
+          text: string
+        }
+        Update: {
+          correct_option?: string
+          created_at?: string
+          id?: string
+          option_a?: string
+          option_b?: string
+          option_c?: string
+          option_d?: string
+          position?: number
+          program_id?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       super_admins: {
         Row: {
@@ -150,7 +314,32 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_quiz_questions: {
+        Args: { p_slug: string }
+        Returns: {
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          question_id: string
+          question_position: number
+          question_text: string
+        }[]
+      }
+      submit_quiz_attempt: {
+        Args: {
+          p_answers: Json
+          p_program_id: string
+          p_total_ms: number
+          p_user_id: string
+        }
+        Returns: {
+          attempt_id: string
+          final_rank: number
+          final_score: number
+          final_total_ms: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
