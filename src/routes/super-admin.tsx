@@ -166,10 +166,27 @@ function PlacesTab() {
     reload();
   }
   async function addWard(panchayathId: string) {
-    const name = (wardInputs[panchayathId] ?? "").trim();
-    if (!name) return;
-    const { error } = await supabase.from("wards").insert({ panchayath_id: panchayathId, name });
-    if (error) return toast.error(error.code === "23505" ? "Ward already exists" : error.message);
+    const raw = (wardInputs[panchayathId] ?? "").trim();
+    if (!raw) return;
+    const count = parseInt(raw, 10);
+    if (!Number.isInteger(count) || count < 1 || count > 500) {
+      return toast.error("Enter a number between 1 and 500");
+    }
+    const existing = new Set(
+      wards.filter((w) => w.panchayath_id === panchayathId).map((w) => w.name)
+    );
+    const rows = Array.from({ length: count }, (_, i) => ({
+      panchayath_id: panchayathId,
+      name: String(i + 1),
+    })).filter((r) => !existing.has(r.name));
+    if (rows.length === 0) {
+      toast.message("All wards already exist");
+      setWardInputs((s) => ({ ...s, [panchayathId]: "" }));
+      return;
+    }
+    const { error } = await supabase.from("wards").insert(rows);
+    if (error) return toast.error(error.message);
+    toast.success(`Added ${rows.length} ward(s)`);
     setWardInputs((s) => ({ ...s, [panchayathId]: "" }));
     reload();
   }
