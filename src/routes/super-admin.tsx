@@ -231,7 +231,8 @@ function PlacesTab() {
                 <input
                   value={wardInputs[p.id] ?? ""}
                   onChange={(e) => setWardInputs((s) => ({ ...s, [p.id]: e.target.value }))}
-                  placeholder="Add ward"
+                  placeholder="Number of wards (e.g. 25)"
+                  inputMode="numeric"
                   className="flex-1 rounded-md bg-black/40 border border-white/10 px-3 py-2 text-sm"
                 />
                 <button onClick={() => addWard(p.id)} className="px-3 py-2 rounded-md bg-[#00f0ff] text-black text-sm font-semibold">Add ward</button>
