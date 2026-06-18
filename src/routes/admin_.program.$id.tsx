@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/admin/program/$id")({ component: QuestionEditor });
+export const Route = createFileRoute("/admin_/program/$id")({ component: QuestionEditor });
 type Question = { id: string; text: string; option_a: string; option_b: string; option_c: string; option_d: string; correct_option: string; position: number };
 
 function QuestionEditor() {
