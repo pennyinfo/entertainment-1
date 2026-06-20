@@ -78,14 +78,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "penny-fun" },
+      { name: "description", content: "enjoy the funs" },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "penny-fun" },
+      { property: "og:description", content: "enjoy the funs" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "penny-fun" },
+      { name: "twitter:description", content: "enjoy the funs" },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e3f35860-a57f-4ad0-8f43-42e59f9cac7a/id-preview-28c144e2--ead830e5-9c3a-41e5-ad8e-e1aa38518930.lovable.app-1781766209228.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e3f35860-a57f-4ad0-8f43-42e59f9cac7a/id-preview-28c144e2--ead830e5-9c3a-41e5-ad8e-e1aa38518930.lovable.app-1781766209228.png" },
     ],
     links: [
       {
